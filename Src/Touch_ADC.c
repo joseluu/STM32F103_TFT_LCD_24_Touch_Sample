@@ -1,0 +1,367 @@
+
+#include <string.h>
+#include <stdio.h>
+#include "stm32f1xx_hal.h"
+#include "LCDConf_F103_24.h"
+#include "Touch_ADC.h"
+
+
+/* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc2;
+
+
+/* Private function prototypes -----------------------------------------------*/
+static void MX_ADC1_Init(void);
+static void MX_ADC2_Init(void);
+
+#define ELEM_SWAP(a,b) { unsigned short t=(a);(a)=(b);(b)=t; }
+#define median(a,n) kth_smallest(a,n,(((n)&1)?((n)/2):(((n)/2)-1)))
+#define NUMSAMPLES 5
+
+static unsigned short kth_smallest(unsigned short a[], int n, int k);
+
+extern UART_HandleTypeDef huart1;
+extern TIM_HandleTypeDef htim3;
+
+void delay_us_DWT(unsigned int us);
+void Error_Handler(void);
+
+void LCD_Touch_ADC_Init(void){
+	__HAL_RCC_ADC1_CLK_ENABLE();
+	__HAL_RCC_ADC2_CLK_ENABLE();
+	MX_ADC1_Init();
+	MX_ADC2_Init();
+	GPIO_Restore_Outputs();
+	HAL_TIM_Base_Start_IT(&htim3);
+}
+
+// when user presses the screen, the returned value is non zero (usually between 1000 and 3000)
+// the x and y coordinates of the touch are returned
+// point (0,0) is at the top left corner assuming the display is held in portrait mode and the reset button is at the bottom
+// xCoordinates varies from 900 to 3000
+// yCoordinates varies from 300 to 900
+unsigned int LCD_Touch_ADC_GetXY(unsigned short * xValueReturned, unsigned short * yValueReturned){
+	volatile static  int g_ADCValue1 = 0;
+	volatile static  int g_ADCValue2 = 0;
+	unsigned short xValue;
+	unsigned short yValue;
+	int zValue;
+	static unsigned short sValues[NUMSAMPLES];
+	static unsigned short sValues2[NUMSAMPLES];
+
+	GPIO_X_MeasurementSetup();
+	xValue = GPIO_X_Measurement();
+
+	GPIO_Y_MeasurementSetup();
+	yValue=GPIO_Y_Measurement();
+
+	GPIO_Z_MeasurementSetup();
+	zValue = GPIO_Z_Measurement();  
+  
+	for (int i = 0; i < NUMSAMPLES; i++) {
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_Start(&hadc2);
+		if ((HAL_ADC_PollForConversion(&hadc1, 1000000) == HAL_OK) &&
+			(HAL_ADC_PollForConversion(&hadc2, 1000000) == HAL_OK)) {
+			g_ADCValue1 = HAL_ADC_GetValue(&hadc1) & 0xFFF; 
+			g_ADCValue2 = HAL_ADC_GetValue(&hadc2) & 0xFFF;
+			sValues[i] = g_ADCValue1;
+			sValues2[i] = g_ADCValue2;
+		}
+	}
+
+	int z2 = median(sValues, NUMSAMPLES); 
+	int z1 = median(sValues2, NUMSAMPLES);
+
+	static float zValue1;
+	static float zValue2;
+
+	zValue1 = z1;
+	zValue1 /= z2;
+	zValue1 *= (1.0 + (xValue - 900.0) / 2500.0);
+	zValue1 *= 4096;
+    
+
+// alternate computation
+	zValue2 = (4095 - (z2 - z1));
+
+	GPIO_Restore_Outputs();
+
+	*xValueReturned = xValue;
+	*yValueReturned = yValue;
+	return (unsigned int)zValue1;
+}
+
+GPIO_PinState P_PinState;
+GPIO_PinState M_PinState;
+
+void GPIO_X_MeasurementSetup(void)
+{
+	// Y axis YP input  YM disconnect
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	GPIO_InitStruct.Pin = YP_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(YP_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = YM_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	HAL_GPIO_Init(YM_GPIO_Port, &GPIO_InitStruct);
+
+    // X axis output
+	GPIO_InitStruct.Pin = XM_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+	HAL_GPIO_Init(XM_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = XP_Pin;
+	HAL_GPIO_Init(XP_GPIO_Port, &GPIO_InitStruct);
+	P_PinState = HAL_GPIO_ReadPin(XP_GPIO_Port, XP_Pin);
+	M_PinState = HAL_GPIO_ReadPin(XP_GPIO_Port, XM_Pin);
+	HAL_GPIO_WritePin(XP_GPIO_Port, XP_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(XM_GPIO_Port, XM_Pin, GPIO_PIN_RESET);
+}
+
+unsigned short GPIO_X_Measurement(void){
+	static int g_ADCValue1;
+	static unsigned short sValues[NUMSAMPLES];
+	static unsigned short xValue;
+	char szValue[50];
+
+	delay_us_DWT(20);
+	for (int i = 0; i < NUMSAMPLES; i++) {
+		HAL_ADC_Start(&hadc1);
+		if (HAL_ADC_PollForConversion(&hadc1, 1000000) == HAL_OK) {
+			g_ADCValue1 = HAL_ADC_GetValue(&hadc1) & 0xFFF; 
+			sValues[i] = g_ADCValue1;
+		}
+	}
+	HAL_GPIO_WritePin(YP_GPIO_Port, YP_Pin, P_PinState);
+	HAL_GPIO_WritePin(YM_GPIO_Port, YM_Pin, M_PinState);
+	GPIO_Restore_Outputs();
+	xValue = median(sValues, NUMSAMPLES);
+	sprintf(szValue, "X: %d\t", xValue);
+	HAL_UART_Transmit(&huart1, szValue, strlen(szValue), 1000); 
+	return xValue;
+}
+void GPIO_Y_MeasurementSetup(void)
+{
+	// X axis XM input  XP disconnect
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	GPIO_InitStruct.Pin = XM_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(XM_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = XP_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	HAL_GPIO_Init(XP_GPIO_Port, &GPIO_InitStruct);
+
+	// Y axis output
+	GPIO_InitStruct.Pin = YP_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	HAL_GPIO_Init(YP_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = YM_Pin;
+	HAL_GPIO_Init(YM_GPIO_Port, &GPIO_InitStruct);
+	P_PinState = HAL_GPIO_ReadPin(YP_GPIO_Port, YP_Pin);
+	M_PinState = HAL_GPIO_ReadPin(YP_GPIO_Port, YM_Pin);
+	HAL_GPIO_WritePin(YP_GPIO_Port, YP_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(YM_GPIO_Port, YM_Pin, GPIO_PIN_RESET);
+}
+
+unsigned short GPIO_Y_Measurement(void){
+	static int g_ADCValue2;
+	static unsigned short sValues[NUMSAMPLES];
+	unsigned short yValue;
+	char szValue[50];
+
+	delay_us_DWT(200);
+	for (int i = 0; i < NUMSAMPLES; i++) {
+		HAL_ADC_Start(&hadc2);
+		if (HAL_ADC_PollForConversion(&hadc2, 1000000) == HAL_OK) {
+			g_ADCValue2 = HAL_ADC_GetValue(&hadc2) & 0xFFF;
+			sValues[i] = g_ADCValue2;
+		}
+	}
+	HAL_GPIO_WritePin(YP_GPIO_Port, YP_Pin, P_PinState);
+	HAL_GPIO_WritePin(YM_GPIO_Port, YM_Pin, M_PinState);
+	GPIO_Restore_Outputs();
+	yValue = median(sValues, NUMSAMPLES);
+	sprintf(szValue, "Y: %d\t", yValue);
+	HAL_UART_Transmit(&huart1, szValue, strlen(szValue), 1000); 
+	return yValue;
+}
+
+void GPIO_Z_MeasurementSetup()
+{
+	// XM input YP input
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	GPIO_InitStruct.Pin = XM_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(XM_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = YP_Pin;
+	HAL_GPIO_Init(YP_GPIO_Port, &GPIO_InitStruct);
+	
+	// XP output YM output
+	GPIO_InitStruct.Pin = XP_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	HAL_GPIO_Init(XP_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = YM_Pin;
+	HAL_GPIO_Init(YM_GPIO_Port, &GPIO_InitStruct);
+	P_PinState = HAL_GPIO_ReadPin(YP_GPIO_Port, YP_Pin);
+	M_PinState = HAL_GPIO_ReadPin(YP_GPIO_Port, YM_Pin);
+	HAL_GPIO_WritePin(XP_GPIO_Port, XP_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(YM_GPIO_Port, YM_Pin, GPIO_PIN_SET);
+}
+
+int GPIO_Z_Measurement(void){ 
+	static int g_ADCValue3;
+	static int g_ADCValue4;
+	static unsigned short sValues[NUMSAMPLES];
+	static unsigned short sValues2[NUMSAMPLES];
+	char szValue[50];
+
+	for (int i = 0; i < NUMSAMPLES; i++) {
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_Start(&hadc2);
+		if ((HAL_ADC_PollForConversion(&hadc1, 1000000) == HAL_OK) &&
+			(HAL_ADC_PollForConversion(&hadc2, 1000000) == HAL_OK)) {
+			g_ADCValue3 = HAL_ADC_GetValue(&hadc1) & 0xFFF; 
+			g_ADCValue4 = HAL_ADC_GetValue(&hadc2) & 0xFFF;
+			sValues[i] = g_ADCValue3;
+			sValues2[i] = g_ADCValue4;
+		}
+	}
+
+	int z2 = median(sValues, NUMSAMPLES); 
+	int z1 = median(sValues2, NUMSAMPLES);
+
+	static float zValue1;
+	static float zValue2;
+	#if 0
+	zValue1 = z1;
+	zValue1 /= z2;
+	zValue1 *= (1.0 + (xValue - 900.0) / 2500.0);
+	zValue1 * = 4096;
+#endif
+
+	// alternate computation
+	zValue2 = (4095 - (z2 - z1));
+
+	GPIO_Restore_Outputs();
+	return (int)(zValue2);
+}
+
+void GPIO_Restore_Outputs(void)
+{
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	GPIO_InitStruct.Pin = XM_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	HAL_GPIO_Init(XM_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = YP_Pin;
+	HAL_GPIO_Init(YP_GPIO_Port, &GPIO_InitStruct);
+	
+
+	GPIO_InitStruct.Pin = XP_Pin;
+	HAL_GPIO_Init(XP_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = YM_Pin;
+	HAL_GPIO_Init(YM_GPIO_Port, &GPIO_InitStruct);
+}
+
+static unsigned short kth_smallest(unsigned short a[], int n, int k)
+{
+	unsigned int i, j, l, m;
+	unsigned short x;
+
+	l = 0; m = n - 1;
+	while (l < m) {
+		x = a[k];
+		i = l;
+		j = m;
+		do {
+			while (a[i] < x) i++;
+			while (x < a[j]) j--;
+			if (i <= j) {
+				ELEM_SWAP(a[i], a[j]);
+				i++; j--;
+			}
+		} while (i <= j) ;
+		if (j < k) l = i;
+		if (k < i) m = j;
+	}
+	return a[k] ;
+}
+
+/* ADC1 init function */
+static void MX_ADC1_Init(void)
+{
+
+	ADC_ChannelConfTypeDef sConfig;
+
+	    /**Common config 
+	    */
+	hadc1.Instance = ADC1;
+	hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+	hadc1.Init.ContinuousConvMode = DISABLE;
+	hadc1.Init.DiscontinuousConvMode = DISABLE;
+	hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+	hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+	hadc1.Init.NbrOfConversion = 1;
+	if (HAL_ADC_Init(&hadc1) != HAL_OK) {
+		Error_Handler();
+	}
+
+	    /**Configure Regular Channel 
+	    */
+	sConfig.Channel = ADC1_CHANNEL;
+	sConfig.Rank = 1;
+	sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
+	if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+		Error_Handler();
+	}
+
+}
+
+/* ADC2 init function */
+static void MX_ADC2_Init(void)
+{
+
+	ADC_ChannelConfTypeDef sConfig;
+
+	    /**Common config 
+	    */
+	hadc2.Instance = ADC2;
+	hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
+	hadc2.Init.ContinuousConvMode = DISABLE;
+	hadc2.Init.DiscontinuousConvMode = DISABLE;
+	hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+	hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+	hadc2.Init.NbrOfConversion = 1;
+	if (HAL_ADC_Init(&hadc2) != HAL_OK) {
+		Error_Handler();
+	}
+
+	    /**Configure Regular Channel 
+	    */
+	sConfig.Channel = ADC2_CHANNEL;
+	sConfig.Rank = 1;
+	sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
+	if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK) {
+		Error_Handler();
+	}
+
+}
