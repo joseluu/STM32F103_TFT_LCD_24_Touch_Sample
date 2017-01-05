@@ -1,6 +1,6 @@
 CodeDB
-Debug
-Release
+Debug/
+Release/
 Src/Backup
 Inc/Backup
 GD32_cube
