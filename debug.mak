@@ -3,7 +3,7 @@
 #USE VISUALGDB PROJECT PROPERTIES DIALOG INSTEAD
 
 BINARYDIR := Debug
-
+ 
 #Additional flags
 PREPROCESSOR_MACROS := DEBUG
 INCLUDE_DIRS := Inc C:/Users/jluu/STM32Cube/Repository/STM32Cube_FW_F1_V1.4.0/Middlewares/ST/STemWin/inc
