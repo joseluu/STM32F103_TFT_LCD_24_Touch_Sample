@@ -29,11 +29,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 #ifdef USE_EMWIN_ANALOG_DRIVER
 
 
-void Touch_GetState(TOUCH_STATE *touch_state)
-{
-	touch_state->pressed = 0;
-}
-
 volatile static int pressure;
 void GUI_TOUCH_X_ActivateY(void){ // for X measurements
 	GPIO_Z_MeasurementSetup();
@@ -42,7 +37,7 @@ void GUI_TOUCH_X_ActivateY(void){ // for X measurements
 
 int GUI_TOUCH_X_MeasureX(void){
 	int xValue=-1;
-	if (pressure > 500) {
+	if (pressure > 100) {
 		GPIO_X_MeasurementSetup();
 		xValue = GPIO_X_Measurement();
 	}
@@ -54,7 +49,7 @@ void GUI_TOUCH_X_ActivateX(void) { //  for Y measurements
 
 int GUI_TOUCH_X_MeasureY(void){
 	int yValue = -1;
-	if (pressure > 500) {
+	if (pressure > 100) {
 		GPIO_Y_MeasurementSetup();
 		yValue = GPIO_Y_Measurement();
 	}
@@ -78,4 +73,6 @@ void   Touch_Initialize(void)
 
 	LCD_Touch_ADC_Init();
 }
-#else#endif
+#else
+
+#endif

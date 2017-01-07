@@ -58,39 +58,12 @@ unsigned int LCD_Touch_ADC_GetXY(unsigned short * xValueReturned, unsigned short
 
 	GPIO_Z_MeasurementSetup();
 	zValue = GPIO_Z_Measurement();  
-  
-	for (int i = 0; i < NUMSAMPLES; i++) {
-		HAL_ADC_Start(&hadc1);
-		HAL_ADC_Start(&hadc2);
-		if ((HAL_ADC_PollForConversion(&hadc1, 1000000) == HAL_OK) &&
-			(HAL_ADC_PollForConversion(&hadc2, 1000000) == HAL_OK)) {
-			g_ADCValue1 = HAL_ADC_GetValue(&hadc1) & 0xFFF; 
-			g_ADCValue2 = HAL_ADC_GetValue(&hadc2) & 0xFFF;
-			sValues[i] = g_ADCValue1;
-			sValues2[i] = g_ADCValue2;
-		}
-	}
-
-	int z2 = median(sValues, NUMSAMPLES); 
-	int z1 = median(sValues2, NUMSAMPLES);
-
-	static float zValue1;
-	static float zValue2;
-
-	zValue1 = z1;
-	zValue1 /= z2;
-	zValue1 *= (1.0 + (xValue - 900.0) / 2500.0);
-	zValue1 *= 4096;
-    
-
-// alternate computation
-	zValue2 = (4095 - (z2 - z1));
 
 	GPIO_Restore_Outputs();
 
 	*xValueReturned = xValue;
 	*yValueReturned = yValue;
-	return (unsigned int)zValue1;
+	return (unsigned int)zValue;
 }
 
 GPIO_PinState P_PinState;
@@ -248,18 +221,23 @@ int GPIO_Z_Measurement(void){
 
 	static float zValue1;
 	static float zValue2;
-	#if 0
+	static float VT;
+	static float pressure;
+
 	zValue1 = z1;
 	zValue1 /= z2;
-	zValue1 *= (1.0 + (xValue - 900.0) / 2500.0);
-	zValue1 * = 4096;
-#endif
+	zValue1 *= (1.0 + (2048 - 900.0) / 2500.0);
+	zValue1 *= 4096;
+    
 
-	// alternate computation
-	zValue2 = (4095 - (z2 - z1));
+// alternate computation
+	VT = (z2 - z1) / 4095.0;
+	zValue2 = 500 * VT / (1 - VT);
+	pressure = (zValue2 > 2000? 0 : 2000 - zValue2);
+	
 
 	GPIO_Restore_Outputs();
-	return (int)(zValue2);
+	return (int)(pressure);
 }
 
 void GPIO_Restore_Outputs(void)

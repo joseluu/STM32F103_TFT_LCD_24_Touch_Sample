@@ -94,7 +94,6 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 	HAL_UART_Transmit(&huart1, "begin\n\r", 7, 1000);
-	Touch_Initialize();
 	MainTask();
   /* USER CODE END 2 */
 

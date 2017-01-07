@@ -375,7 +375,6 @@ unsigned int rd_reg_data32(unsigned char reg)
 	r = rb[0] << 24 | rb[1] << 16 | rb[2] << 8 | rb[3];
 
 	_CS(1); // force CS HIGH to cancel the cmd in case it was not supported
-	_CS(0);
 	return r;
 }
 
@@ -424,7 +423,8 @@ int LCD_SafeToInterrupt(void){
 	if (HAL_GPIO_ReadPin(YP_GPIO_Port, YP_Pin) == GPIO_PIN_RESET) { // check if CS active
 		return 0;
 	}
-#endif	return 1;
+#endif
+	return 1;
 }
 
 void LCD_X_Config(void) {
