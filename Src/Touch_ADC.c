@@ -230,15 +230,30 @@ int GPIO_Z_Measurement(void){
 	static float VT;
 	static float pressure;
 
-	zValue1 = z1;
-	zValue1 /= z2;
-	zValue1 *= (1.0 + (2048 - 900.0) / 2500.0);
-	zValue1 *= 4096;
-    
+/* Touch resistance formula, see picture page 7 in http://www.cypress.com/file/131941/download
+   in addition to resistors shown in this document, there are minimum resistances
+   at each end of the resistive layers, the formula below is valid for a resistive 
+   screen measured as 300 ohms on the X direction and 680 ohms on the Y direction
+   300 ohms is composed by 40 ohms resistance at both ends with 220 ohms split
+   on both side of the pressure point, that is: 40 + 220 X + 220 (1-X) + 40
+   680 ohms is composed of 90 ohms on both ends, the rest split on the sides 
+   of the pressure point: 90 + 500 Y + 500 (1-Y) + 90
+	RT is the touch resistance
+	X is the measured X position between 0 and 1
+	Y ditto
+	VT is the voltage difference measured in Z mode between 0 and 1 where 1 is the inactive value
 
-// alternate computation
+	RT= (130 * VT + 220 * VT * X + 500 * VT  * Y)/(VT - 1)
+
+	*/
+    
+	if (z2 > 4094) {// let's not divide by 0
+		z2 = 4094;
+	}
+	// here we approximate using X=0.5 and Y=0.5
 	VT = (z2 - z1) / 4095.0;
-	zValue2 = 500 * VT / (1 - VT);
+	zValue2 = 490 * VT / (1 - VT);
+	//pressure varies as inverse of resistance
 	pressure = (zValue2 > 2000? 0 : 2000 - zValue2);
 	
 	HAL_GPIO_WritePin(XP_GPIO_Port, XP_Pin, P_PinState);
