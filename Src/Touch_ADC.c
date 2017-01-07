@@ -74,6 +74,9 @@ void GPIO_X_MeasurementSetup(void)
 	// Y axis YP input  YM disconnect
 	GPIO_InitTypeDef GPIO_InitStruct;
 
+	P_PinState = ((XP_GPIO_Port->ODR & XP_Pin) != 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+	M_PinState = ((XM_GPIO_Port->ODR & XM_Pin) != 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+
 	GPIO_InitStruct.Pin = YP_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -91,8 +94,7 @@ void GPIO_X_MeasurementSetup(void)
 
 	GPIO_InitStruct.Pin = XP_Pin;
 	HAL_GPIO_Init(XP_GPIO_Port, &GPIO_InitStruct);
-	P_PinState = HAL_GPIO_ReadPin(XP_GPIO_Port, XP_Pin);
-	M_PinState = HAL_GPIO_ReadPin(XP_GPIO_Port, XM_Pin);
+
 	HAL_GPIO_WritePin(XP_GPIO_Port, XP_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(XM_GPIO_Port, XM_Pin, GPIO_PIN_RESET);
 }
@@ -111,8 +113,8 @@ unsigned short GPIO_X_Measurement(void){
 			sValues[i] = g_ADCValue1;
 		}
 	}
-	HAL_GPIO_WritePin(YP_GPIO_Port, YP_Pin, P_PinState);
-	HAL_GPIO_WritePin(YM_GPIO_Port, YM_Pin, M_PinState);
+	HAL_GPIO_WritePin(YP_GPIO_Port, XP_Pin, P_PinState);
+	HAL_GPIO_WritePin(YM_GPIO_Port, XM_Pin, M_PinState);
 	GPIO_Restore_Outputs();
 	xValue = median(sValues, NUMSAMPLES);
 	sprintf(szValue, "X: %d\t", xValue);
@@ -123,6 +125,9 @@ void GPIO_Y_MeasurementSetup(void)
 {
 	// X axis XM input  XP disconnect
 	GPIO_InitTypeDef GPIO_InitStruct;
+
+	P_PinState = ((YP_GPIO_Port->ODR & YP_Pin) != 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+	M_PinState = ((YM_GPIO_Port->ODR & YM_Pin) != 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
 
 	GPIO_InitStruct.Pin = XM_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
@@ -141,8 +146,7 @@ void GPIO_Y_MeasurementSetup(void)
 
 	GPIO_InitStruct.Pin = YM_Pin;
 	HAL_GPIO_Init(YM_GPIO_Port, &GPIO_InitStruct);
-	P_PinState = HAL_GPIO_ReadPin(YP_GPIO_Port, YP_Pin);
-	M_PinState = HAL_GPIO_ReadPin(YP_GPIO_Port, YM_Pin);
+	
 	HAL_GPIO_WritePin(YP_GPIO_Port, YP_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(YM_GPIO_Port, YM_Pin, GPIO_PIN_RESET);
 }
@@ -175,6 +179,9 @@ void GPIO_Z_MeasurementSetup()
 	// XM input YP input
 	GPIO_InitTypeDef GPIO_InitStruct;
 
+	P_PinState = ((XP_GPIO_Port->ODR & XP_Pin) != 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+	M_PinState = ((YM_GPIO_Port->ODR & YM_Pin) != 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+
 	GPIO_InitStruct.Pin = XM_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -191,8 +198,7 @@ void GPIO_Z_MeasurementSetup()
 
 	GPIO_InitStruct.Pin = YM_Pin;
 	HAL_GPIO_Init(YM_GPIO_Port, &GPIO_InitStruct);
-	P_PinState = HAL_GPIO_ReadPin(YP_GPIO_Port, YP_Pin);
-	M_PinState = HAL_GPIO_ReadPin(YP_GPIO_Port, YM_Pin);
+
 	HAL_GPIO_WritePin(XP_GPIO_Port, XP_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(YM_GPIO_Port, YM_Pin, GPIO_PIN_SET);
 }
@@ -235,7 +241,8 @@ int GPIO_Z_Measurement(void){
 	zValue2 = 500 * VT / (1 - VT);
 	pressure = (zValue2 > 2000? 0 : 2000 - zValue2);
 	
-
+	HAL_GPIO_WritePin(XP_GPIO_Port, XP_Pin, P_PinState);
+	HAL_GPIO_WritePin(YM_GPIO_Port, YM_Pin, M_PinState);
 	GPIO_Restore_Outputs();
 	return (int)(pressure);
 }
