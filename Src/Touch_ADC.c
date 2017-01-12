@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "stm32f1xx_hal.h"
 #include "LCDConf_F103_24.h"
+#ifdef USING_TOUCH_ADC
 #include "Touch_ADC.h"
 
 
@@ -365,3 +366,5 @@ static void MX_ADC2_Init(void)
 	}
 
 }
+
+#endif // USING_TOUCH_ADC

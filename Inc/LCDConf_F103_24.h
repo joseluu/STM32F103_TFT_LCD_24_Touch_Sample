@@ -36,6 +36,7 @@ Purpose     : Display driver configuration file
 #define INIT_PIN(PORT,PIN) GPIO_InitStruct.Pin = PIN; \
 							HAL_GPIO_Init(PORT,&GPIO_InitStruct);
 
+extern int tftID;
 void LcdWriteReg8(unsigned char Cmd);
 void LcdWriteData8(unsigned char Data);
 void LcdWriteReg16(unsigned short Cmd);

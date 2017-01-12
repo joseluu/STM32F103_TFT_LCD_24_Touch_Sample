@@ -43,6 +43,8 @@
 #include "board_config.h"
 #include "Touch_sample.h"
 #include "Board_Touch.h"
+#include "LCDConf_F103_24.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -62,6 +64,17 @@ void Error_Handler(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+
+void serialTrace(unsigned char * message)
+{
+	HAL_UART_Transmit(&huart1, message, strlen((char*)message), 1000);
+}
+
+void GUI_is_initialized(void){
+	char szLcdID[10];
+	sprintf(szLcdID, "ID: %0x4\n\r", tftID);
+serialTrace(szLcdID);
+}
 
 /* USER CODE END 0 */
 

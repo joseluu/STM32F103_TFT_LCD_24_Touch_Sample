@@ -49,7 +49,7 @@ Requirements: WindowManager - ( )
 */
 
 #include "GUI.h"
-
+#include "board_config.h"
 /*********************************************************************
 *
 *       Defines
@@ -77,7 +77,13 @@ void MainTask(void) {
   int           yPhys;
 
   GUI_Init();	
+#ifdef SWEEPER
+// trace initialization: not possible on Nucleo or GD32 as serial shares the same pins
+	GUI_is_initialized();
+#endif
+  #ifdef USING_TOUCH_ADC
   Touch_Initialize();
+  #endif
   //
   // Check if recommended memory for the sample is available
   //

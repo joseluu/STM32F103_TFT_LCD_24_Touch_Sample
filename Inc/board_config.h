@@ -3,13 +3,18 @@
 #define _board_config_h
 
 
-#define NUCLEO
-//#define SWEEPER
+// next 3 lines: choose which board you have
+//#define NUCLEO
+#define SWEEPER
 //#define GD32_CLOCK
 
 
-//#define ILI9320
+
+#ifdef SWEEPER
+#define ILI9320
+#else#define USING_TOUCH_ADC
 #define ILI9341
+#endif
 
 #ifdef NUCLEO
 #define NUCLEO_CLOCKS

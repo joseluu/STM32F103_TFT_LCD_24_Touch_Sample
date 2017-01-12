@@ -12,7 +12,7 @@
 #include "Board_Touch.h"
 #include "Touch_ADC.h"
 #include "LCDConf_F103_24.h"
-
+#ifdef USING_TOUCH_ADC
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -75,4 +75,5 @@ void   Touch_Initialize(void)
 }
 #else
 
+#endif
 #endif

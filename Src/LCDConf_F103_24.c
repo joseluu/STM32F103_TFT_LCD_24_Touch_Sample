@@ -120,7 +120,7 @@ Purpose     : Display controller configuration (single layer)
 **********************************************************************
 */
 void MX_GPIO_Init(void);
-
+int tftID;
 
 
 
@@ -379,7 +379,6 @@ unsigned int rd_reg_data32(unsigned char reg)
 }
 
 void Board_LCD_Init(void) {
-	unsigned int tftID;
 	MX_GPIO_Init();
 	_RD(1);
 	_WR(1);
