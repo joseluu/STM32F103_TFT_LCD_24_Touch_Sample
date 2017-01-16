@@ -186,11 +186,11 @@ void LcdWriteReg16(unsigned short Cmd)
 	_CS(0);
 	_DC(0); // 0=cmd
 	_WR(0);
-	GPIOA->ODR = (GPIOA->ODR & 0xFF00) | (Cmd & 0xFF); //write LSB
+	GPIOA->ODR = (GPIOA->ODR & 0xFF00) | (Cmd >> 8);     // write MSB
 	_LE(1);
 	delay_clk_DWT(1);
 	_LE(0);
-	GPIOA->ODR = (GPIOA->ODR & 0xFF00) | (Cmd >> 8);     // write MSB
+	GPIOA->ODR = (GPIOA->ODR & 0xFF00) | (Cmd & 0xFF); //write LSB
 	delay_clk_DWT(1);
 	_WR(1);					// should allow 10ns min settling time
 	_CS(1);
@@ -225,11 +225,11 @@ void LcdWriteData16(unsigned short Data)
 {
 	_CS(0);
 	_DC(1); // 1=data just to make sure
-	GPIOA->ODR = (GPIOA->ODR & 0xFF00) | (Data&0xFF);     // write LSB
+	GPIOA->ODR = (GPIOA->ODR & 0xFF00) | (Data >> 8);     // write MSB
 	_LE(1);
 	delay_clk_DWT(1);
 	_LE(0);
-	GPIOA->ODR = (GPIOA->ODR & 0xFF00) | (Data >> 8);     // write MSB
+	GPIOA->ODR = (GPIOA->ODR & 0xFF00) | (Data & 0xFF);     // write LSB
 	delay_clk_DWT(1);
 	_WR(0);
 	_WR(1);					// should allow 10ns min settling time
