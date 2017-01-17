@@ -139,6 +139,15 @@ void delay_us_DWT(int uSec)
 	} while (DWT->CYCCNT - start < cycles);
 }
 
+void delay_ms_DWT(int mSec)
+{
+	uint32_t uSec = mSec * 1000;
+	volatile uint32_t cycles = (SystemCoreClock / 1000000L)*uSec;
+	volatile uint32_t start = DWT->CYCCNT;
+	do {
+	} while (DWT->CYCCNT - start < cycles);
+}
+
 /********************************************************************
 *
 *       LcdWriteReg
