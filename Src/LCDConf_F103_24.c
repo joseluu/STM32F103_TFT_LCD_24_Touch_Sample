@@ -537,13 +537,13 @@ void MX_GPIO_Init(void)
 
 #ifdef SWEEPER
 	  /*Configure GPIO pin : PB */
-	GPIO_InitStruct.Pin = (GPIO_PIN_14);
+	GPIO_InitStruct.Pin = (GPIO_PIN_8 | GPIO_PIN_14);
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-	GPIOB->ODR = 0x1F0; // avoid spikes on control lines
+	GPIOB->ODR = 1 << 14; // avoid spikes on control lines
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	GPIOB->ODR = 0x1F0;
+	GPIOB->ODR = 1 << 14;
 
 	  /*Configure GPIO pins : PC13: LED */
 	GPIO_InitStruct.Pin = (GPIO_PIN_6 | GPIO_PIN_8 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12);
