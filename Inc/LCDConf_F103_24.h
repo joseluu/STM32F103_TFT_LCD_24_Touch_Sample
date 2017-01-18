@@ -59,6 +59,7 @@ reset: PB_15,
 #define _DC(val) HAL_GPIO_WritePin(GPIOC,GPIO_PIN_12,(val?GPIO_PIN_SET:GPIO_PIN_RESET))
 #define _CS(val) HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8,(val?GPIO_PIN_SET:GPIO_PIN_RESET))
 #define _RESET(val) HAL_GPIO_WritePin(GPIOC,GPIO_PIN_6,(val?GPIO_PIN_SET:GPIO_PIN_RESET))
+#define _SYNC(val)  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_8,(val?GPIO_PIN_SET:GPIO_PIN_RESET))  // synchronize oscilloscope
 #else
 #ifdef NUCLEO
 #define SCATTERED_LCD_DATA_IO

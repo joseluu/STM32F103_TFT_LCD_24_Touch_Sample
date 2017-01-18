@@ -403,7 +403,8 @@ void Board_LCD_Init(void) {
 	_RESET(1);          // end reset
 	delay_us_DWT(151370);		// 120 ms min		
 
-
+	_SYNC(1);
+	_SYNC(0);
 	tftID = rd_reg_data32(0x0);
 	lcd_ctrl_initialize();
 
