@@ -90,7 +90,7 @@ void GPIO_X_MeasurementSetup(void)
     // X axis output
 	GPIO_InitStruct.Pin = XM_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
 	HAL_GPIO_Init(XM_GPIO_Port, &GPIO_InitStruct);
 
 	GPIO_InitStruct.Pin = XP_Pin;
