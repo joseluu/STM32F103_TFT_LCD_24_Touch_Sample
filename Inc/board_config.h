@@ -14,7 +14,8 @@
 
 #ifdef SWEEPER
 #define ILI9320
-#else#define USING_TOUCH_ADC
+#else
+#define USING_TOUCH_ADC
 #define ILI9341
 #endif
 
