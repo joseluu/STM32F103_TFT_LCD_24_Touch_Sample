@@ -40,9 +40,6 @@
     <ClInclude Include="Inc\adc.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\gpio.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\main.h">
       <Filter>Header files</Filter>
     </ClInclude>
@@ -268,6 +265,9 @@
     <ClInclude Include="Inc\Touch_ADC.h">
       <Filter>Header files</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\Touch_ADS7843.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\adc.c">
@@ -445,6 +445,9 @@
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="Src\Touch_ADC.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Touch_ADS7843.c">
       <Filter>Source files</Filter>
     </ClCompile>
   </ItemGroup>

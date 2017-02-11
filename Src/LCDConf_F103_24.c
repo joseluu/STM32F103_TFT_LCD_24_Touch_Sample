@@ -190,6 +190,7 @@ static U8 ScatteredRead8(void){
 
 void LcdWriteReg16(unsigned short Cmd)
 {
+//	Port_Data_output();
 	_CS(1); // cancel previous command
 	delay_clk_DWT(1);
 	_CS(0);
@@ -232,6 +233,7 @@ void LcdWriteReg8(unsigned char Cmd) {
 */
 void LcdWriteData16(unsigned short Data)
 {
+//	Port_Data_output();
 	_CS(0);
 	_DC(1); // 1=data just to make sure
 	GPIOA->ODR = (GPIOA->ODR & 0xFF00) | (Data >> 8);     // write MSB
@@ -349,6 +351,7 @@ static U8 LcdReadData8(void){
 	Data = ScatteredRead8();
 #else
 	Data= GPIOA->IDR;     // read 8bit should allow 45ns settling time
+	delay_clk_DWT(1); 
 #endif
 	_RD(1);	
 	Port_Data_output();
@@ -368,6 +371,7 @@ static void LcdReadDataMultiple8(U8 * pData, int NumItems) {
 		*pData++ = ScatteredRead8();
 #else
 		*pData++ = GPIOA->IDR;     // read 8bit should allow 45ns settling time
+		delay_clk_DWT(1); 
 #endif
 		_RD(1);	
 	}
@@ -403,9 +407,9 @@ void Board_LCD_Init(void) {
 	_RESET(1);          // end reset
 	delay_us_DWT(151370);		// 120 ms min		
 
-	_SYNC(1);
-	_SYNC(0);
-	tftID = rd_reg_data32(0x0);
+//	_SYNC(1);
+//	_SYNC(0);
+//	tftID = rd_reg_data32(0x0);
 	lcd_ctrl_initialize();
 
 }
@@ -428,7 +432,7 @@ void Board_LCD_Init(void) {
 */
 
 int LCD_SafeToInterrupt(void){
-#ifdef NUCLEO
+#ifdef USING_TOUCH_ADC
 	if (HAL_GPIO_ReadPin(YP_GPIO_Port, YP_Pin) == GPIO_PIN_RESET) { // check if CS active
 		return 0;
 	}
@@ -452,7 +456,11 @@ void LCD_X_Config(void) {
   //
   // Orientation
   //
+#ifndef SWEEPWER
 	Config.Orientation = GUI_SWAP_XY;
+#else
+	Config.Orientation= GUI_SWAP_XY | GUI_MIRROR_Y;   // pour ecran_cricri
+#endif
   GUIDRV_FlexColor_Config(pDevice, &Config);
 
 #if (GUI_SUPPORT_TOUCH)
@@ -536,8 +544,8 @@ void MX_GPIO_Init(void)
 	Port_Data_output();
 
 #ifdef SWEEPER
-	  /*Configure GPIO pin : PB */
-	GPIO_InitStruct.Pin = (GPIO_PIN_8 | GPIO_PIN_14);
+	  /*Configure GPIO pin : PB OUT */
+	GPIO_InitStruct.Pin = (GPIO_PIN_8 | GPIO_PIN_14  | GPIO_PIN_15);
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -545,8 +553,8 @@ void MX_GPIO_Init(void)
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 	GPIOB->ODR = 1 << 14;
 
-	  /*Configure GPIO pins : PC13: LED */
-	GPIO_InitStruct.Pin = (GPIO_PIN_6 | GPIO_PIN_8 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12);
+	  /*Configure GPIO pins : PC OUT */
+	GPIO_InitStruct.Pin = (GPIO_PIN_0 | GPIO_PIN_6 | GPIO_PIN_7| GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12| GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15);
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -593,6 +601,10 @@ void MX_GPIO_Init(void)
 #endif
 
 }
-
+void SynchroScope()
+	{
+		_SYNC(1);
+		_SYNC(0);
+	}
 /*************************** End of file ****************************/
 

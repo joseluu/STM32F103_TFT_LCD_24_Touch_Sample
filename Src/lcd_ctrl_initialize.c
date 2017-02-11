@@ -37,14 +37,18 @@ void lcd_ctrl_initialize(void)
 	LCD_Delay(50000);
 	LCD_Delay(50000);
 	LCD_Delay(50000);								// 200ms
+	LCD_Delay_ms(200);
 	LCD_WriteRegister(0x10, 0x17B0);
 	LCD_WriteRegister(0x11, 0x0037);
-	LCD_Delay(50000);		
+	LCD_Delay(50000);
+LCD_Delay_ms(100);	
 	LCD_WriteRegister(0x12, 0x013a);
 	LCD_Delay(50000);
+	LCD_Delay_ms(100);
 	LCD_WriteRegister(0x13, 0x1600);
 	LCD_WriteRegister(0x29, 0x000c);		// (Power control 7) VcomH voltage = VREG1OUT x .69
 	LCD_Delay(50000);
+	LCD_Delay_ms(100);
 	LCD_WriteRegister(0x20, 0x0000);
 	LCD_WriteRegister(0x21, 0x0000);
 	LCD_WriteRegister(0x30, 0x0504);

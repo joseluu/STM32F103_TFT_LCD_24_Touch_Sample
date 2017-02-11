@@ -58,6 +58,7 @@ Purpose     : Display controller initialization
   */
 
 #include "GUI.h"
+#include "board_config.h"
 
 /*********************************************************************
 *
@@ -69,7 +70,9 @@ Purpose     : Display controller initialization
 //
 // Define the available number of bytes available for the GUI
 //
+
 #define GUI_NUMBYTES  (1024) *  13   // x KByte
+
 
 /*********************************************************************
 *

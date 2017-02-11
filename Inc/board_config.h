@@ -5,7 +5,7 @@
 
 // next 3 lines: choose which board you have
 //#define NUCLEO
-//#define SWEEPER
+#define SWEEPER
 //#define GD32_CLOCK
 
 // TODO: GD32_CLOCK should be used to initialize the HSE clock to 12MHz in stm32f1xx_hal_conf.h
@@ -14,6 +14,7 @@
 
 #ifdef SWEEPER
 #define ILI9320
+#define USING_TOUCH_ADS7843
 #else
 #define USING_TOUCH_ADC
 #define ILI9341

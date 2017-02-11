@@ -129,7 +129,6 @@
     <ClInclude Include="Inc\board_config.h" />
     <ClInclude Include="Inc\Board_Touch.h" />
     <ClInclude Include="Inc\crc.h" />
-    <ClInclude Include="Inc\gpio.h" />
     <ClInclude Include="Inc\GUIConf.h" />
     <ClInclude Include="Inc\LCDConf_F103_24.h" />
     <ClInclude Include="Inc\lcd_ctrl_initialize.h" />
@@ -138,6 +137,7 @@
     <ClInclude Include="Inc\stm32f1xx_it.h" />
     <ClInclude Include="Inc\tim.h" />
     <ClInclude Include="Inc\Touch_ADC.h" />
+    <ClInclude Include="Inc\Touch_ADS7843.h" />
     <ClInclude Include="Inc\Touch_sample.h" />
     <ClInclude Include="Inc\usart.h" />
   </ItemGroup>
@@ -199,6 +199,7 @@
     <ClCompile Include="Src\tim.c" />
     <ClCompile Include="Src\Board_Touch.c" />
     <ClCompile Include="Src\Touch_ADC.c" />
+    <ClCompile Include="Src\Touch_ADS7843.c" />
     <ClCompile Include="Src\TOUCH_Sample.c" />
     <ClCompile Include="Src\usart.c" />
   </ItemGroup>

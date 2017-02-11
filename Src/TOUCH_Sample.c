@@ -56,10 +56,7 @@ Requirements: WindowManager - ( )
 *
 **********************************************************************
 */
-//
-// Recommended memory to run the sample with adequate performance
-//
-#define RECOMMENDED_MEMORY (1024L * 10)
+	
 
 /*********************************************************************
 *
@@ -72,61 +69,54 @@ Requirements: WindowManager - ( )
 *       MainTask
 */
 void MainTask(void) {
-  GUI_PID_STATE TouchState;
-  int           xPhys;
-  int           yPhys;
+	GUI_PID_STATE TouchState;
+	int           xPhys;
+	int           yPhys;
+	
+	GUI_Init();	
 
-  GUI_Init();	
-#ifdef SWEEPER
-// trace initialization: not possible on Nucleo or GD32 as serial shares the same pins
-	GUI_is_initialized();
+	Touch_Initialize();
+
+#ifndef SWEEPER
+//toxic on sweeper
+	GUI_CURSOR_Show();
+	GUI_CURSOR_Select(&GUI_CursorCrossL);
 #endif
-  #ifdef USING_TOUCH_ADC
-  Touch_Initialize();
-  #endif
-  //
-  // Check if recommended memory for the sample is available
-  //
-  if (GUI_ALLOC_GetNumFreeBytes() < RECOMMENDED_MEMORY) {
-    GUI_ErrorOut("Not enough memory available."); 
-    return;
+	GUI_SetBkColor(GUI_WHITE);
+	GUI_SetColor(GUI_BLACK);
+	GUI_Clear();
+	GUI_DispString("Measurement of\nA/D converter values");
+
+	while (1) {
+		GUI_TOUCH_GetState(&TouchState);  // Get the touch position in pixel
+		xPhys = GUI_TOUCH_GetxPhys();     // Get the A/D mesurement result in x
+		yPhys = GUI_TOUCH_GetyPhys();     // Get the A/D mesurement result in y
+		//
+		// Display the measurement result
+		//
+		GUI_SetColor(GUI_BLUE);
+		GUI_DispStringAt("Analog input:\n", 0, 20);
+		GUI_GotoY(GUI_GetDispPosY() + 2);
+		GUI_DispString("x:");
+		GUI_DispDec(xPhys, 4);
+		GUI_DispString(", y:");
+		GUI_DispDec(yPhys, 4);
+		//
+		// Display the according position
+		//
+		GUI_SetColor(GUI_RED);
+		GUI_GotoY(GUI_GetDispPosY() + 4);
+		GUI_DispString("\nPosition:\n");
+		GUI_GotoY(GUI_GetDispPosY() + 2);
+		GUI_DispString("x:");
+		GUI_DispDec(TouchState.x,4);
+		GUI_DispString(", y:");
+		GUI_DispDec(TouchState.y,4);
+		//
+		// Wait a while
+		//
+		GUI_Delay(100);
   }
-  GUI_CURSOR_Show();
-  GUI_CURSOR_Select(&GUI_CursorCrossL);
-  GUI_SetBkColor(GUI_WHITE);
-  GUI_SetColor(GUI_BLACK);
-  GUI_Clear();
-  GUI_DispString("Measurement of\nA/D converter values");
-  while (1) {
-    GUI_TOUCH_GetState(&TouchState);  // Get the touch position in pixel
-    xPhys = GUI_TOUCH_GetxPhys();     // Get the A/D mesurement result in x
-    yPhys = GUI_TOUCH_GetyPhys();     // Get the A/D mesurement result in y
-    //
-    // Display the measurement result
-    //
-    GUI_SetColor(GUI_BLUE);
-    GUI_DispStringAt("Analog input:\n", 0, 20);
-    GUI_GotoY(GUI_GetDispPosY() + 2);
-    GUI_DispString("x:");
-    GUI_DispDec(xPhys, 4);
-    GUI_DispString(", y:");
-    GUI_DispDec(yPhys, 4);
-    //
-    // Display the according position
-    //
-    GUI_SetColor(GUI_RED);
-    GUI_GotoY(GUI_GetDispPosY() + 4);
-    GUI_DispString("\nPosition:\n");
-    GUI_GotoY(GUI_GetDispPosY() + 2);
-    GUI_DispString("x:");
-    GUI_DispDec(TouchState.x,4);
-    GUI_DispString(", y:");
-    GUI_DispDec(TouchState.y,4);
-    //
-    // Wait a while
-    //
-    GUI_Delay(100);
-  };
 }
 
 /*************************** End of file ****************************/

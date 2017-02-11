@@ -34,7 +34,9 @@
 #include "main.h"
 #include "board_config.h"
 #include "stm32f1xx_hal.h"
+#ifdef USING_TOUCH_ADC
 #include "adc.h"
+#endif
 #include "crc.h"
 #include "tim.h"
 #include "usart.h"
@@ -71,12 +73,12 @@ void serialTrace(unsigned char * message)
 	HAL_UART_Transmit(&huart1, message, strlen((char*)message), 1000);
 }
 
-void GUI_is_initialized(void){
+/*void GUI_is_initialized(void){
 	char szLcdID[10];
 	sprintf(szLcdID, "ID: %0x4\n\r", tftID);
 serialTrace(szLcdID);
 }
-
+*/
 /* USER CODE END 0 */
 
 int main(void)
@@ -102,8 +104,10 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
-  MX_ADC1_Init();
-  MX_ADC2_Init();
+#ifdef USING_TOUCH_ADC
+ MX_ADC1_Init();
+ MX_ADC2_Init();
+#endif
   MX_CRC_Init();
 
   /* USER CODE BEGIN 2 */
@@ -140,6 +144,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
