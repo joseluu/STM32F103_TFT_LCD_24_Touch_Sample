@@ -10,7 +10,7 @@
 #include "stm32f1xx_hal.h"
 #include <GUI.h>
 #include "Board_Touch.h"
-#include "Board_Config.h"
+#include "board_config.h"
 
 #include "LCDConf_F103_24.h"
 

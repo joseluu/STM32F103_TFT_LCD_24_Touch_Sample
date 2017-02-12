@@ -6,8 +6,8 @@ BINARYDIR := Release
 
 #Additional flags
 PREPROCESSOR_MACROS := NDEBUG RELEASE
-INCLUDE_DIRS := Inc C:/Users/jluu/STM32Cube/Repository/STM32Cube_FW_F1_V1.4.0/Middlewares/ST/STemWin/inc
-LIBRARY_DIRS := C:/Users/jluu/STM32Cube/Repository/STM32Cube_FW_F1_V1.4.0/Middlewares/ST/STemWin/Lib
+INCLUDE_DIRS := Inc C:/STM32Cube/Repository/STM32Cube_FW_F1_V1.4.0/Middlewares/ST/STemWin/inc
+LIBRARY_DIRS := C:/STM32Cube/Repository/STM32Cube_FW_F1_V1.4.0/Middlewares/ST/STemWin/Lib
 LIBRARY_NAMES := STemWin528_CM3_GCC
 ADDITIONAL_LINKER_INPUTS := 
 MACOS_FRAMEWORKS := 

@@ -254,7 +254,6 @@ void LcdWriteData8(unsigned char Data) {
 #else
 	GPIOA->ODR = (GPIOA->ODR & 0xFF00) | (Data & 0xFF);     // write 8bit
 #endif
-	delay_clk_DWT(1);
 	_WR(0);
 	_WR(1);					// should allow 10ns min settling time
 	_CS(1);
