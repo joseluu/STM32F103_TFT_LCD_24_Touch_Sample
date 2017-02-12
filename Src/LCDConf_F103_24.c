@@ -76,6 +76,8 @@ Purpose     : Display controller configuration (single layer)
 #define XSIZE_PHYS  240
 #define YSIZE_PHYS  320
 
+
+
 /*********************************************************************
 *
 *       Configuration checking
@@ -455,10 +457,10 @@ void LCD_X_Config(void) {
   //
   // Orientation
   //
-#ifndef SWEEPWER
-	Config.Orientation = GUI_SWAP_XY;
-#else
+#ifdef SWEEPER
 	Config.Orientation= GUI_SWAP_XY | GUI_MIRROR_Y;   // pour ecran_cricri
+#else
+	Config.Orientation = GUI_SWAP_XY;
 #endif
   GUIDRV_FlexColor_Config(pDevice, &Config);
 
@@ -490,7 +492,11 @@ void LCD_X_Config(void) {
   PortAPI.pfRead8_A1 = LcdReadData8;
   PortAPI.pfReadM8_A1  = LcdReadDataMultiple8;
 #endif
+#ifdef SWEEPER
+	GUIDRV_FlexColor_SetFunc(pDevice, &PortAPI, GUIDRV_FLEXCOLOR_F66708, GUIDRV_FLEXCOLOR_M16C0B16);    //// modif cricri
+#else
 	GUIDRV_FlexColor_SetFunc(pDevice, &PortAPI, GUIDRV_FLEXCOLOR_F66709, GUIDRV_FLEXCOLOR_M16C0B8);
+#endif
 }
 
 /*********************************************************************
@@ -558,6 +564,15 @@ void MX_GPIO_Init(void)
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
 	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	
+				/*Configure GPIO pins : PA IN  pour touch panel */									// modif cricri
+	GPIO_InitStruct.Pin = GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 ;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	
+	
 #elif defined(NUCLEO)
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -576,7 +591,7 @@ void MX_GPIO_Init(void)
 	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 #else
 
-  /*Configure GPIO pin : PA8 */
+  /*Configure GPIO pin : PA8 */									
 	GPIO_InitStruct.Pin = GPIO_PIN_8;
 	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -591,12 +606,15 @@ void MX_GPIO_Init(void)
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 	GPIOB->ODR = 0x1F0;
 
-	  /*Configure GPIO pins : PC13: LED */
+	  /*Configure GPIO pins : PC13: LED */							
 	GPIO_InitStruct.Pin = GPIO_PIN_13;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
 	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	
+
+	
 #endif
 
 }

@@ -96,7 +96,7 @@ int Read_X(void)
     WR_CMD(CHX);
    // while(TP_BUSY);
     Delayus(5);
-	i=(RD_AD()/13);
+	i=(RD_AD()/12.6);							//	modif cricri
     return i;   
 }
 //====================================================================================
@@ -106,7 +106,7 @@ int Read_Y(void)
     WR_CMD(CHY);
     //while(TP_BUSY);
     Delayus(5);
-    i=(RD_AD()/17);
+    i=(RD_AD()/16);						// modif cricri
     return i;    
 }
 //====================================================================================
